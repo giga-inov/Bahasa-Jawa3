@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="jv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Basa Jawa Kelas 3</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fde68a 100%);
+            min-height: 100vh;
+        }
+        .javanese-pattern {
+            background-image: radial-gradient(#d97706 0.75px, transparent 0.75px), radial-gradient(#d97706 0.75px, #fef3c7 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @media print {
+            body { background: white !important; }
+            no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased javanese-pattern min-h-screen flex flex-col justify-between">
+
+    <div id="app" class="w-full max-w-4xl mx-auto p-4 sm:p-6 my-auto flex-grow flex flex-col justify-center">
+        <!-- Dynamic content injected here -->
+    </div>
+
+    <footer class="text-center py-4 text-xs font-semibold text-amber-900 bg-amber-100/80 border-t border-amber-200">
+        🌿 Petualangan Basa Jawa Kelas 3 SD | Giga Inovation (081329200985)
+    </footer>
+
+    <script>
+        const state = {
+            currentScreen: 'welcome', // welcome, instructions, map, material, quiz, result, certificate
+            studentName: '',
+            currentWulangan: 1,
+            currentSubMaterial: 'A',
+            score: 0,
+            currentQuestionIndex: 0,
+            answers: {}, // questionIndex => selectedOption index (0,1,2,3)
+            savedQuizState: null
+        };
+
+        const materialsData = {
+            1: {
+                title: "WULANGAN 1 – NGRUNGOKAKE CRITA",
+                desc: "Sinau ngrungokake crita, teks pawarta, tokoh wayang, geguritan, lan paramasastra.",
+                subs: {
+                    A: {
+                        name: "A. Nyemak isi teks pawarta",
+                        content: "Teks pawarta yaiku informasi utawa kabar kedadean penting sing kudu disimak kanthi tlesik. Gatekna isine supaya bisa nemokake informasi penting, mangsuli pitakon, lan milih katrangan sing bener."
+                    },
+                    B: {
+                        name: "B. Maca bab crita tokoh wayang",
+                        content: "Crita wayang ngemot piwulang luhur lan para paraga (tokoh) kayata Pandhawa lan Kurawa. Sinau maca lan kenali watake para tokoh wayang kasebut."
+                    },
+                    C: {
+                        name: "C. Micara geguritan tokoh wayang",
+                        content: "Geguritan minangka puisi Jawa gagrag anyar. Micara utawa maca geguritan kudu nggatekake wirama, wirasa, lan wicara sing trep karo tema tokoh wayang."
+                    },
+                    D: {
+                        name: "D. Nulis crita wayang",
+                        content: "Sinau nulis lan melengkapi ukara, nyusun tembung dadi ukara sing bener babagan crita wayang."
+                    },
+                    E: {
+                        name: "E. Kawruh Basa",
+                        content: "Sinau tegese tembung (kosakata) lan unggah-ungguh basa sing ana gandhengane karo materi Wulangan 1."
+                    },
+                    F: {
+                        name: "F. Paramasastra",
+                        content: "Sinau babagan paramasastra (tata basa Jawa) kayata jinising tembung lan panulisan ukara sing becik."
+                    }
+                }
+            },
+            2: {
+                title: "WULANGAN 2 – UNGGAH-UNGGUH",
+                desc: "Sinau bab unggah-ungguh, teks kepahlawanan, geguritan pahlawan, lan wicara.",
+                subs: {
+                    A: {
+                        name: "A. Nyemak teks nonsastra babagan kepahlawanan",
+                        content: "Teks nonsastra tema kepahlawanan ngemot nilai wJUWANG, semangat bela negara, lan katresnan marang bangsa lan negara."
+                    },
+                    B: {
+                        name: "B. Maca geguritan tema pahlawan",
+                        content: "Maca geguritan pahlawan kanthi penghayatan lan intonasi sing bener kanggo ngrasakake gedhene perjuangan para pahlawan."
+                    },
+                    C: {
+                        name: "C. Ayo micara bab pahlawan",
+                        content: "Latihan micara, mangsuli pitakon, lan ngetokake panemu utawa respons babagan jasa para pahlawan."
+                    },
+                    D: {
+                        name: "D. Ayo nulis",
+                        content: "Sinau nulis ukara lan nyusun tembung dadi ukara runtut kanthi tema kepahlawanan."
+                    },
+                    E: {
+                        name: "E. Kawruh Basa",
+                        content: "Sinau kosa kata basa Jawa babagan unggah-ungguh lan kepahlawanan."
+                    },
+                    F: {
+                        name: "F. Paramasastra",
+                        content: "Sinau struktur paramasastra basa Jawa sing trep kanggo unggah-ungguh."
+                    }
+                }
+            },
+            3: {
+                title: "WULANGAN 3 – NULIS TEKS NARASI",
+                desc: "Sinau tembang dolanan, wacan kerjasama, nembang, lan nulis crita narasi.",
+                subs: {
+                    A: {
+                        name: "A. Nyemak tembang dolanan",
+                        content: "Tembang dolanan asring ditemokake ing pasrawungan bocah-bocah. Isine ngandhut piwulang budi pekerti lan rasa gembira."
+                    },
+                    B: {
+                        name: "B. Maca wacan kanthi tema Kerjasama",
+                        content: "Kerjasama utawa gotong royong nggawe pagaweyan dadi cepet rampung. Sinau nemokake gagasan lan informasi penting saka wacan."
+                    },
+                    C: {
+                        name: "C. Nembang dolanan",
+                        content: "Latihan nembang dolanan laras karo lirik sing sumadya ing sumber sinau kanthi bener."
+                    },
+                    D: {
+                        name: "D. Nulis crita narasi",
+                        content: "Sinau nulis crita narasi, ngurutake kedadean, lan melengkapi crita sederhana."
+                    },
+                    E: {
+                        name: "E. Kawruh Basa",
+                        content: "Sinau kosa kata lan tegese tembung ing wulangan teks narasi."
+                    },
+                    F: {
+                        name: "F. Paramasastra",
+                        content: "Sinau tatanan ukara narasi lan paramasastra Jawa."
+                    }
+                }
+            },
+            4: {
+                title: "WULANGAN 4 – AKSARA JAWA NGLEGENA",
+                desc: "Sinau sejarah aksara Jawa, maca lan nulis aksara Jawa nglegena ha nganti la.",
+                subs: {
+                    A: {
+                        name: "A. Nyemak sejarahe aksara Jawa",
+                        content: "Sejarah Aksara Jawa asalnya saka legenda Aji Saka. Kenali sejarah lan informasi wigati babagan aksara Jawa."
+                    },
+                    B: {
+                        name: "B. Maca aksara jawa legena ha nganti la",
+                        content: "Aksara Jawa nglegena cacahe ana 20 yaiku: ha, na, ca, ra, ka, da, ta, sa, wa, la, pa, dha, ja, ya, ny, ma, ga, ba, tha, nga. Sinau maca aksara lan tembung."
+                    },
+                    C: {
+                        name: "C. Berbicara/Wicara",
+                        content: "Latihan wicara, mangsuli pitakon, lan nyampekake katrangan prasaja babagan aksara Jawa."
+                    },
+                    D: {
+                        name: "D. Nulis aksara jawa",
+                        content: "Latihan nulis lan nyalin aksara Jawa nglegena ha nganti la kanthi bener manut conto sumber."
+                    }
+                }
+            }
+        };
+
+        const questionsData = [
+            // --- WULANGAN 1 (13 Questions: Q1 - Q13) ---
+            {
+                wulangan: 1,
+                question: "Apa tegese nyemak teks pawarta?",
+                options: ["Maca buku cerkak", "Ngrungokake kabar utawa informasi wigati", "Nembang dolanan", "Nulis aksara jawa"],
+                answer: 1, // B
+                explanation: "Nyemak teks pawarta tegese ngrungokake kabar utawa informasi wigati sing bener."
+            },
+            {
+                wulangan: 1,
+                question: "Ing crita wayang, Pandhawa cacahe ana pira?",
+                options: ["Telu", "Lima", "Pitu", "Songo"],
+                answer: 1, // B
+                explanation: "Pandhawa cacahe ana lima yaiku Yudhistira, Bima, Arjuna, Nakula, lan Sadewa."
+            },
+            {
+                wulangan: 1,
+                question: "Sapa paraga pandhawa sing praupan sumeh lan pinunjul ing babagan panah?",
+                options: ["Bima", "Arjuna", "Puntadewa", "Nakula"],
+                answer: 1, // B
+                explanation: "Arjuna dikenal minangka satriya ing Madukara sing pinunjul ing babagan manah."
+            },
+            {
+                wulangan: 1,
+                question: "Geguritan yaiku...",
+                options: ["Puisi Jawa gagrag anyar", "Tembang dolanan", "Dongeng kewan", "Teks pawarta"],
+                answer: 0, // A
+                explanation: "Geguritan yaiku wujud puisi Jawa gagrag anyar sing edi peni lan endah."
+            },
+            {
+                wulangan: 1,
+                question: "Nalika maca geguritan, bab sing perlu digatekake yaiku...",
+                options: ["Swara sing seru banget", "Mlaku kesusu", "Wirama, wirasa, lan wicara", "Ora usah nggatekake tegese"],
+                answer: 2, // C
+                explanation: "Wirama, wirasa, lan wicara sing trep bakal nggawe geguritan kapireng endah."
+            },
+            {
+                wulangan: 1,
+                question: "Tembung 'satriya' tegese...",
+                options: ["Wong tani", "Pedagang pasar", "Anak cilik", "Prajurit utawa wong lanang sing wani lan luhur budine"],
+                answer: 3, // D
+                explanation: "Satriya tegese prajurit utawa wong sing wani mbelani bener kanthi budi luhur."
+            },
+            {
+                wulangan: 1,
+                question: "Yen ana pitakon ing teks pawarta, cara mangsuli kudu...",
+                options: ["Berdasarkan isi teks pawarta sing disimak", "Ngarang dhewe sing adoh", "Tulis sakarepe", "Ora perlu dijawab"],
+                answer: 0, // A
+                explanation: "Mangsuli pitakon pawarta kudu adhedhasar isi informasi sing bener ing teks."
+            },
+            {
+                wulangan: 1,
+                question: "Bima utawa Werkudara iku satriya ing...",
+                options: ["Madukara", "Jodhipati", "Ambarata", "Pringgandani"],
+                answer: 1, // B
+                explanation: "Raden Werkudara utawa Bima satriya ing Jodhipati."
+            },
+            {
+                wulangan: 1,
+                question: "Apa ciri utamane Raden Werkudara?",
+                options: ["Awake cilik", "Awake dhuwur gedhe lan duwe kuku pancanaka", "Suka nesu", "Seneng lunga"],
+                answer: 1, // B
+                explanation: "Werkudara kuwi awake gedhe dhuwur sarta duwe kuku sakti aran Pancanaka."
+            },
+            {
+                wulangan: 1,
+                question: "Kepiye carane nulis ukara sing bener saka tembung-tembung acak?",
+                options: ["Ditulis dibalik kabeh", "Ditulis tanpa sepasi", "Diurutake supaya dadi ukara sing wutuh lan trep tegese", "Digawe aksara jawa kabeh"],
+                answer: 2, // C
+                explanation: "Nyusun tembung dadi ukara kudu digatekake teges lan struktur sing bener."
+            },
+            {
+                wulangan: 1,
+                question: "Apa sing diarani Paramasastra?",
+                options: ["Critane kewan", "Jeneng tembang", "Tembang macapat", "Elmu sing ngrembug tatanan basa"],
+                answer: 3, // D
+                explanation: "Paramasastra yaiku elmu tata basa sing ngatur tatanan basa Jawa."
+            },
+            {
+                wulangan: 1,
+                question: "Yen disimak kanthi tlesik, teks pawarta bakal menehi...",
+                options: ["Dongeng khayalan", "Kabar utawa informasi sing bener lan cetha", "Lagu dolanan", "Crita misteri"],
+                answer: 1, // B
+                explanation: "Teks pawarta tujuane menehi informasi kanyatan utawa kabar sing bener."
+            },
+            {
+                wulangan: 1,
+                question: "Sapa pambarep (anak nomer siji) ing satriya Pandhawa?",
+                options: ["Yudhistira / Puntadewa", "Arjuna", "Bima", "Sadewa"],
+                answer: 0, // A
+                explanation: "Puntadewa utawa Yudhistira yaiku putra pambarep Pandhawa."
+            },
+
+            // --- WULANGAN 2 (12 Questions: Q14 - Q25) ---
+            {
+                wulangan: 2,
+                question: "Apa tema utama ing Wulangan 2?",
+                options: ["Aksara Jawa", "Tembang dolanan", "Kepahlawanan lan Unggah-ungguh", "Crita kewan"],
+                answer: 2, // C
+                explanation: "Wulangan 2 ngrembug babagan Unggah-ungguh lan teks kepahlawanan."
+            },
+            {
+                wulangan: 2,
+                question: "Pahlawan yaiku wong sing...",
+                options: ["Suka turu wengi", "Seneng dolanan game", "Mburu kewan ing alas", "Wani berjuang mbela bangsa lan negara"],
+                answer: 3, // D
+                explanation: "Pahlawan yaiku satriya bangsa sing wani berjuang kanthi tulus."
+            },
+            {
+                wulangan: 2,
+                question: "Kepiye tumindak sing nuduhake rasa kurmat marang pahlawan?",
+                options: ["Ngenget-ngenget lan nerusake perjuangane kanthi sregep sinau", "Ngenyek jasane", "Lali marang sejarah", "Ngrusak tugu pahlawan"],
+                answer: 0, // A
+                explanation: "Sinau sing sregep lan ngajeni jasa pahlawan minangka wujud rasa kurmat."
+            },
+            {
+                wulangan: 2,
+                question: "Nalika guneman karo wong tuwa, becike nggunakake basa...",
+                options: ["Ngoko Lugu", "Krama Alus / Krama Inggil", "Basa kasar", "Basa campur aduk"],
+                answer: 1, // B
+                explanation: "Guneman karo wong tuwa wajib nggunakake basa Krama sing sopan."
+            },
+            {
+                wulangan: 2,
+                question: "Apa tegese unggah-ungguh?",
+                options: ["Tata sopan santun utawa tata krama", "Cara mlayu cepet", "Omah adat jawa", "Jeneng panganan"],
+                answer: 0, // A
+                explanation: "Unggah-ungguh tegese tata krama utawa sopan santun ing pasrawungan."
+            },
+            {
+                wulangan: 2,
+                question: "Geguritan tema pahlawan biasane nggambarake...",
+                options: ["Kahanan pasar malem", "Kasetyan lan wani berjuang mbela negara", "Sato kewan ing alas", "Pandhawa lan Kurawa"],
+                answer: 1, // B
+                explanation: "Geguritan pahlawan nyritakake rasa tresna tanah air lan perjuangan."
+            },
+            {
+                wulangan: 2,
+                question: "Yen kowe ditulungi kanca, tembung sing patut diucapake yaiku...",
+                options: ["Nyuwun sewu", "Sepurane", "Matur nuwun", "Monggo"],
+                answer: 2, // C
+                explanation: "Tembung 'Matur nuwun' diucapake nalika nampa pitulungan."
+            },
+            {
+                wulangan: 2,
+                question: "Kepiye carane micara sing bener nalika matur marang bapak utawa ibu guru?",
+                options: ["Karo bengok-bengok", "Nglirik mripate", "Karo mlayu-mlayu", "Kanthi subasita lan basa sing alus"],
+                answer: 3, // D
+                explanation: "Matur marang guru kudu nganggo subasita lan basa sing sopan."
+            },
+            {
+                wulangan: 2,
+                question: "Salah siji pahlawan nasional saka Jawa yaiku...",
+                options: ["Pangeran Diponegoro, R.A. Kartini, lan Ki Hajar Dewantara", "Kancil", "Sawijining Raseksa", "Kurawa"],
+                answer: 0, // A
+                explanation: "Pangeran Diponegoro, R.A. Kartini, lan Ki Hajar Dewantara kalebu pahlawan nasional."
+            },
+            {
+                wulangan: 2,
+                question: "Apa tegese tembung 'bela negara'?",
+                options: ["Tuku dolanan akeh", "Nglindhungi lan njaga keslametane negara", "Turu ing lapangan", "Nglencer menyang luar negeri"],
+                answer: 1, // B
+                explanation: "Bela negara tegese pakaryan njaga lan nglabuhi nagari."
+            },
+            {
+                wulangan: 2,
+                question: "Yen arep mlebu kamar utawa liwat ing ngarepe wong tuwa, becike ngucap...",
+                options: ["Sugeng enjang", "Monggo", "Nyuwun sewu", "Kula nuwun"],
+                answer: 2, // C
+                explanation: "Ngucap 'Nyuwun sewu' minangka wujud unggah-ungguh nalika liwat ing ngarep wong tuwa."
+            },
+            {
+                wulangan: 2,
+                question: "Paramasastra lan Kawruh Basa ing wulangan unggah-ungguh mbantu siswa supaya...",
+                options: ["Bisa nembang macapat", "Bisa nulis aksara jawa kuno", "Bisa maca aksara latin wae", "Bisa guneman lan tata krama kanthi bener"],
+                answer: 3, // D
+                explanation: "Sinau kasebut nggawe siswa luwih mengerti tata krama basa lan subasita."
+            },
+
+            // --- WULANGAN 3 (13 Questions: Q26 - Q38) ---
+            {
+                wulangan: 3,
+                question: "Apa judhul materi ing Wulangan 3?",
+                options: ["Nulis Teks Narasi", "Ngrungokake Crita Wayang", "Aksara Jawa Nglegena", "Unggah-Ungguh Basa"],
+                answer: 0, // A
+                explanation: "Wulangan 3 fokus ing Nulis Teks Narasi lan Tembang Dolanan."
+            },
+            {
+                wulangan: 3,
+                question: "Tembang dolanan biasane dinyanyikake bocah-bocah nalika...",
+                options: ["Sinau ing kelas pas jam ujian", "Wektu istirahat utawa dolanan ing plataran", "Turu wengi", "Mangan awan"],
+                answer: 1, // B
+                explanation: "Tembang dolanan rinakit kanggo dipun-alunake pas dolanan."
+            },
+            {
+                wulangan: 3,
+                question: "Sebutake salah siji contone tembang dolanan...",
+                options: ["Gugur Gunung", "Menthok-menthok lan Padhang Bulan", "Kinanthi", "Dhandhanggula"],
+                answer: 1, // B
+                explanation: "Padhang Bulan lan Menthok-menthok kalebu tuladha tembang dolanan."
+            },
+            {
+                wulangan: 3,
+                question: "Apa tegese tema Kerjasama?",
+                options: ["Pagaweyan ditandangi dhewe", "Lunga adoh dewekan", "Nyambut gawe bareng-bareng supaya enteng", "Turoning lapangan"],
+                answer: 2, // C
+                explanation: "Kerjasama utawa gotong royong nggawe pagaweyan abot dadi enteng."
+            },
+            {
+                wulangan: 3,
+                question: "Teks narasi yaiku wacan sing nyritakake...",
+                options: ["Langkah-langkah nggawe ubarampe", "Dhaptar rega barang", "Undhang-undhang", "Kedadean utawa prastawa miturut urutan wektu"],
+                answer: 3, // D
+                explanation: "Teks narasi ngemot crita prastawa utawa kedadean kanthi runtut."
+            },
+            {
+                wulangan: 3,
+                question: "Kepiye tumindak bocah sing seneng kerjasama ing sekolah?",
+                options: ["Piket kelas bareng kanca-kanca", "Pamer dolanan anyar", "Mbolos sinau", "Nganggu kanca sing sinau"],
+                answer: 0, // A
+                explanation: "Piket kelas bareng nuduhake rasa kerjasama sing becik."
+            },
+            {
+                wulangan: 3,
+                question: "Nalika nembang dolanan, swara lan wiramane kudu...",
+                options: ["Sengsara lan sedih", "Ria, gembira, lan trep karo lirik", "Kaya wong nesu", "Tanpa irama"],
+                answer: 1, // B
+                explanation: "Tembang dolanan asipat gembira lan sumringah."
+            },
+            {
+                wulangan: 3,
+                question: "Ukara ing crita narasi biasane disusun nganggo urutan...",
+                options: ["Tanpa aturan", "Mbalik saka buri menyang ngarep", "Miwiti saka wiwitan, tengah, nganti pungkasan prastawa", "Acak sakarepe"],
+                answer: 2, // C
+                explanation: "Crita narasi nduweni alur kedadean sing runtut saka wiwitan nganti rampung."
+            },
+            {
+                wulangan: 3,
+                question: "Apa gunane sinau nulis crita narasi tumrap bocah kelas 3?",
+                options: ["Supaya bisa dadi dhalang", "Supaya bisa dodolan ing pasar", "Supaya bisa numpak pit", "Bisa nyritakake pengalaman pribadi kanthi runtut"],
+                answer: 3, // D
+                explanation: "Nulis narasi melatih siswa nulis pengalaman utawa prastawa kanthi runtut."
+            },
+            {
+                wulangan: 3,
+                question: "Saka lirik tembang dolanan, biasane ngandhut piwulang...",
+                options: ["Budi pekerti luhur lan pitutur becik", "Pamer bandha", "Tumindak ala", "Rasa gething"],
+                answer: 0, // A
+                explanation: "Tembang dolanan sarat karo piwulang budi pekerti lan pitutur luhur."
+            },
+            {
+                wulangan: 3,
+                question: "Yen ana kanca sing kangelan nyambut gawe, sikapmu sing bener yaiku...",
+                options: ["Dijarno wae", "Ditulungi supaya ndang rampung", "Didelengin karo guyon", "Ditinggal mulih"],
+                answer: 1, // B
+                explanation: "Kanca sing kangelan kudu ditulungi minangka wujud kerjasama."
+            },
+            {
+                wulangan: 3,
+                question: "Tembung 'Gugur Gunung' ing kabudayan Jawa tegese...",
+                options: ["Numpak gunung dhuwur", "Mendaki gunung", "Gotong royong utawa kerja bakti", "Nandur pari"],
+                answer: 2, // C
+                explanation: "Gugur gunung tegese gotong royong utawa kerja bakti bebarengan."
+            },
+            {
+                wulangan: 3,
+                question: "Kepiye carane nglengkapi crita narasi sing rumpang?",
+                options: ["Ngarang crita liya sing beda banget", "Dikosongi wae", "Ditulis angka kabeh", "Milih tembung utawa ukara sing nyambung karo isine"],
+                answer: 3, // D
+                explanation: "Melengkapi crita rumpang kudu nyocokake konteks ukara ing sakupenge."
+            },
+
+            // --- WULANGAN 4 (12 Questions: Q39 - Q50) ---
+            {
+                wulangan: 4,
+                question: "Apa judhul materi ing Wulangan 4?",
+                options: ["Aksara Jawa Nglegena", "Tembang Macapat", "Crita Wayang Kulit", "Unggah-Ungguh Basa"],
+                answer: 0, // A
+                explanation: "Wulangan 4 fokus sinau Aksara Jawa Nglegena (ha nganti la)."
+            },
+            {
+                wulangan: 4,
+                question: "Sapa sing kasohor ing legendha asal-usule aksara Jawa?",
+                options: ["Prabu Siliwangi", "Aji Saka", "Joko Tingkir", "Panji Asmarabangun"],
+                answer: 1, // B
+                explanation: "Asal-usul aksara Jawa asring dikaitake karo crita legendaris Aji Saka."
+            },
+            {
+                wulangan: 4,
+                question: "Aksara Jawa nglegena cacahe ana pira?",
+                options: ["15 aksara", "25 aksara", "20 aksara", "30 aksara"],
+                answer: 2, // C
+                explanation: "Aksara Jawa nglegena cacahe ana 20 wiwit saka Ha nganti Nga."
+            },
+            {
+                wulangan: 4,
+                question: "Urutan aksara Jawa sing bener ing wiwitan yaiku...",
+                options: ["Pa, dha, ja, ya, nya", "Ma, ga, ba, tha, nga", "Da, ta, sa, wa, la", "Ha, na, ca, ra, ka"],
+                answer: 3, // D
+                explanation: "Loro puluh aksara nglegena diwiwiti saka Ha, Na, Ca, Ra, Ka."
+            },
+            {
+                wulangan: 4,
+                question: "Aksara sing kapisan ing urutan aksara Jawa nglegena yaiku...",
+                options: ["Ha", "Na", "Ca", "Ra"],
+                answer: 0, // A
+                explanation: "Aksara kapisan yaiku 'Ha'."
+            },
+            {
+                wulangan: 4,
+                question: "Apa wacan aksara Jawa iki: ꦲꦤ (Ha Na)?",
+                options: ["Bapa", "Ana", "Basa", "Dhana"],
+                answer: 1, // B
+                explanation: "Aksara Ha lan Na diwaca 'Ana'."
+            },
+            {
+                wulangan: 4,
+                question: "Aksara 'ca' ing aksara Jawa digunakake kanggo...",
+                options: ["Nulis angka", "Tandha wacan", "Miwiti swara 'ca'", "Panyekeg ukara"],
+                answer: 2, // C
+                explanation: "Aksara ca kanggo nulis swara 'ca'."
+            },
+            {
+                wulangan: 4,
+                question: "Kepiye carane sinau nulis aksara Jawa sing bener?",
+                options: ["Ditulis sakgeleme dhewe", "Tanpa nggatekake bentuk", "Mung diwaca wae", "Nulis kanthi njingglengi bentuk lan urutan coretan manut conto"],
+                answer: 3, // D
+                explanation: "Nulis aksara Jawa kudu miturut bentuk lan wujud coretan ing conto."
+            },
+            {
+                wulangan: 4,
+                question: "Ing aksara Jawa nglegena, aksara kaping lima yaiku...",
+                options: ["Ka", "Ra", "Ca", "Na"],
+                answer: 0, // A
+                explanation: "Urutan kelima yaiku Aksara Ka (Ha, Na, Ca, Ra, Ka)."
+            },
+            {
+                wulangan: 4,
+                question: "Apa gunane sinau aksara Jawa tumrap siswa SD?",
+                options: ["Supaya dadi seniman lukis", "Nguri-uri kabudayan jawi lan mlestarike warisan leluhur", "Supaya gampang tuku barang", "Supaya bisa basa asing"],
+                answer: 1, // B
+                explanation: "Sinau aksara Jawa iku wujud nguri-uri kabudayan lan warisan leluhur."
+            },
+            {
+                wulangan: 4,
+                question: "Aksara 'la' manggon ing urutan pungkasan sakwise...",
+                options: ["Pa", "Sa", "Wa", "Da"],
+                answer: 2, // C
+                explanation: "Urutane: Sa, Wa, La (Ha na ca ra ka, da ta sa wa la...)."
+            },
+            {
+                wulangan: 4,
+                question: "Yen bocah sregep latihan maca lan nulis aksara Jawa nglegena, asile bakal...",
+                options: ["Lali kabeh", "Kesel terus", "Bingung", "Lancar lan pinter maca tulisan jawa"],
+                answer: 3, // D
+                explanation: "Sregep latihan bakal nggawe trampil maca lan nulis aksara Jawa."
+            }
+        ];
+
+        function navigate(screen) {
+            state.currentScreen = screen;
+            render();
+            window.scrollTo(0, 0);
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            switch(state.currentScreen) {
+                case 'welcome':
+                    app.innerHTML = renderWelcomeScreen();
+                    break;
+                case 'instructions':
+                    app.innerHTML = renderInstructionsScreen();
+                    break;
+                case 'map':
+                    app.innerHTML = renderMapScreen();
+                    break;
+                case 'material':
+                    app.innerHTML = renderMaterialScreen();
+                    break;
+                case 'quiz':
+                    app.innerHTML = renderQuizScreen();
+                    break;
+                case 'result':
+                    app.innerHTML = renderResultScreen();
+                    break;
+                case 'certificate':
+                    app.innerHTML = renderCertificateScreen();
+                    break;
+            }
+        }
+
+        function renderWelcomeScreen() {
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-10 border-4 border-amber-400 text-center animate-float">
+                    <div class="text-5xl sm:text-6xl mb-4">🌿✨📜</div>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold text-amber-800 mb-2">PETUALANGAN BASA JAWA</h1>
+                    <h2 class="text-lg sm:text-2xl font-bold text-amber-600 mb-6">KELAS 3 SD</h2>
+                    <p class="text-base sm:text-lg text-slate-700 italic mb-8 bg-amber-50 py-3 px-6 rounded-2xl border border-amber-200 shadow-inner">
+                        "Sinau Basa Jawa kanthi Nyenengake"
+                    </p>
+
+                    <div class="max-w-md mx-auto mb-6 text-left">
+                        <label class="block text-sm font-bold text-amber-900 mb-2">Lebokna Jenengmu (Nama Siswa):</label>
+                        <input type="text" id="studentNameInput" value="${state.studentName}" placeholder="Conto: Dimas Pratama" 
+                            class="w-full px-4 py-3 rounded-xl border-2 border-amber-300 focus:outline-none focus:border-amber-500 font-semibold text-lg text-slate-800 bg-amber-50/50">
+                    </div>
+
+                    <button onclick="handleStartGame()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-lg sm:text-xl py-4 px-8 rounded-2xl shadow-lg transform transition active:scale-95 flex items-center justify-center mx-auto gap-3">
+                        🚀 MIWITI PETUALANGAN
+                    </button>
+                </div>
+            `;
+        }
+
+        function handleStartGame() {
+            const input = document.getElementById('studentNameInput').value.trim();
+            if (!input) {
+                alertBox("Mangga lebokna jenengmu dhisik, Petualang Cilik!");
+                return;
+            }
+            state.studentName = input;
+            navigate('instructions');
+        }
+
+        function alertBox(msg) {
+            const div = document.createElement('div');
+            div.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4";
+            div.innerHTML = `
+                <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border-4 border-amber-400 animate-float">
+                    <p class="text-lg font-bold text-amber-900 mb-4">${msg}</p>
+                    <button onclick="this.parentElement.parentElement.remove()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-xl shadow">Bener</button>
+                </div>
+            `;
+            document.body.appendChild(div);
+        }
+
+        function renderInstructionsScreen() {
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-8 border-4 border-amber-400">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-3xl">🧭</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-900">PETUNJUK PERMAINAN</h2>
+                    </div>
+                    <p class="text-amber-800 font-bold mb-4">Wilujeng rawuh, <span class="text-orange-600">${state.studentName}</span>! Gatekna petunjuk ing ngisor iki:</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm sm:text-base mb-6 text-slate-700">
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">1. Sinau materi Basa Jawa kanthi tlesik.</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">2. Njelajah 4 Wulangan (Dunia Pembelajaran).</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">3. Nyemak, maca, micara, lan nulis.</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">4. Sinau tembang dolanan & geguritan.</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">5. Sinau Aksara Jawa Nglegena.</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">6. Ngrampungake tantangan & kuis.</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">7. Njawab tepat 50 soal pilihan ganda.</div>
+                        <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">8. Entuk poin lan Sertifikat digital!</div>
+                    </div>
+
+                    <button onclick="navigate('map')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-lg py-4 px-6 rounded-2xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
+                        🗺️ Buka Peta Petualangan
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderMapScreen() {
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-8 border-4 border-amber-400">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b pb-4 border-amber-200 gap-2">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-900">PETA PETUALANGAN</h2>
+                            <p class="text-sm font-semibold text-amber-700">Petualang Cilik: <span class="text-orange-600">${state.studentName}</span></p>
+                        </div>
+                        <button onclick="startQuizFromMap()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-extrabold py-3 px-6 rounded-2xl shadow-lg flex items-center gap-2 animate-bounce">
+                            🎯 Mulai Kuis (50 Soal)
+                        </button>
+                    </div>
+
+                    <p class="text-slate-700 mb-6 font-medium text-center sm:text-left">Pilih salah siji Wulangan ing ngisor iki kanggo maca materi lan sinau sadurunge njawab kuis:</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <!-- Level 1 -->
+                        <div onclick="openMaterial(1)" class="cursor-pointer bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-amber-300 hover:border-orange-500 p-5 rounded-2xl shadow transition transform hover:-translate-y-1">
+                            <div class="text-3xl mb-2">🌾</div>
+                            <span class="text-xs font-bold bg-amber-200 text-amber-900 px-2 py-1 rounded-lg">LEVEL 1</span>
+                            <h3 class="text-lg font-extrabold text-amber-900 mt-2">NGRUNGOKAKE CRITA</h3>
+                            <p class="text-xs text-slate-600 mt-1">Pawarta, crita wayang, geguritan, & paramasastra.</p>
+                            <div class="mt-4 text-xs font-bold text-orange-600 flex items-center gap-1">📚 Sinau Materi &rarr;</div>
+                        </div>
+
+                        <!-- Level 2 -->
+                        <div onclick="openMaterial(2)" class="cursor-pointer bg-gradient-to-br from-emerald-100 to-teal-100 border-2 border-emerald-300 hover:border-teal-500 p-5 rounded-2xl shadow transition transform hover:-translate-y-1">
+                            <div class="text-3xl mb-2">🤝</div>
+                            <span class="text-xs font-bold bg-emerald-200 text-emerald-900 px-2 py-1 rounded-lg">LEVEL 2</span>
+                            <h3 class="text-lg font-extrabold text-emerald-900 mt-2">UNGGAH-UNGGUH</h3>
+                            <p class="text-xs text-slate-600 mt-1">Teks pahlawan, geguritan pahlawan, wicara, & nulis.</p>
+                            <div class="mt-4 text-xs font-bold text-teal-600 flex items-center gap-1">📚 Sinau Materi &rarr;</div>
+                        </div>
+
+                        <!-- Level 3 -->
+                        <div onclick="openMaterial(3)" class="cursor-pointer bg-gradient-to-br from-sky-100 to-blue-100 border-2 border-sky-300 hover:border-blue-500 p-5 rounded-2xl shadow transition transform hover:-translate-y-1">
+                            <div class="text-3xl mb-2">📖</div>
+                            <span class="text-xs font-bold bg-sky-200 text-sky-900 px-2 py-1 rounded-lg">LEVEL 3</span>
+                            <h3 class="text-lg font-extrabold text-sky-900 mt-2">NULIS TEKS NARASI</h3>
+                            <p class="text-xs text-slate-600 mt-1">Tembang dolanan, wacan kerjasama, & nulis narasi.</p>
+                            <div class="mt-4 text-xs font-bold text-blue-600 flex items-center gap-1">📚 Sinau Materi &rarr;</div>
+                        </div>
+
+                        <!-- Level 4 -->
+                        <div onclick="openMaterial(4)" class="cursor-pointer bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-300 hover:border-pink-500 p-5 rounded-2xl shadow transition transform hover:-translate-y-1">
+                            <div class="text-3xl mb-2">📜</div>
+                            <span class="text-xs font-bold bg-purple-200 text-purple-900 px-2 py-1 rounded-lg">LEVEL 4</span>
+                            <h3 class="text-lg font-extrabold text-purple-900 mt-2">AKSARA JAWA NGLEGENA</h3>
+                            <p class="text-xs text-slate-600 mt-1">Sejarah aksara, maca & nulis aksara ha nganti la.</p>
+                            <div class="mt-4 text-xs font-bold text-pink-600 flex items-center gap-1">📚 Sinau Materi &rarr;</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openMaterial(wulanganNum) {
+            state.currentWulangan = wulanganNum;
+            state.currentSubMaterial = 'A';
+            navigate('material');
+        }
+
+        function startQuizFromMap() {
+            if (state.currentQuestionIndex === undefined || state.currentQuestionIndex >= questionsData.length) {
+                state.currentQuestionIndex = 0;
+                state.score = 0;
+                state.answers = {};
+            }
+            navigate('quiz');
+        }
+
+        function renderMaterialScreen() {
+            const wData = materialsData[state.currentWulangan];
+            const subKeys = Object.keys(wData.subs);
+            const currentSub = wData.subs[state.currentSubMaterial];
+
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-8 border-4 border-amber-400">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4 border-amber-200 gap-3">
+                        <div>
+                            <span class="text-xs font-extrabold bg-amber-200 text-amber-900 px-3 py-1 rounded-full">MATERI PEMBELAJARAN</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-amber-900 mt-1">${wData.title}</h2>
+                        </div>
+                        <button onclick="navigate('map')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-xl shadow text-sm flex items-center gap-2">
+                            🗺️ Bali menyang Peta
+                        </button>
+                    </div>
+
+                    <!-- Sub Material Tabs -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        ${subKeys.map(k => `
+                            <button onclick="changeSubMaterial('${k}')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition ${state.currentSubMaterial === k ? 'bg-amber-600 text-white shadow-md' : 'bg-amber-100 text-amber-900 hover:bg-amber-200'}">
+                                ${k}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <!-- Content Box -->
+                    <div class="bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-5 sm:p-6 mb-6">
+                        <h3 class="text-lg font-bold text-amber-900 mb-3">${currentSub.name}</h3>
+                        <p class="text-slate-800 text-base sm:text-lg leading-relaxed mb-4">${currentSub.content}</p>
+                        
+                        <div class="bg-white p-4 rounded-xl border border-amber-200 mt-4 flex items-start gap-3">
+                            <span class="text-2xl">💡</span>
+                            <div>
+                                <h4 class="font-bold text-amber-900 text-sm">Cathetan Petualang Cilik (${state.studentName}):</h4>
+                                <p class="text-slate-600 text-sm mt-1">Gatekna materine kanthi setiti sadurunge nerusake marang pitakon kuis supaya bijimu apik!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Navigation -->
+                    <div class="flex justify-between items-center">
+                        <button onclick="navigate('map')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 px-6 rounded-xl text-sm">
+                            &larr; Peta Petualangan
+                        </button>
+                        <button onclick="returnToQuiz()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-extrabold py-3 px-6 rounded-xl shadow text-sm flex items-center gap-2">
+                            ↩ Bali menyang Kuis
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changeSubMaterial(subKey) {
+            state.currentSubMaterial = subKey;
+            render();
+        }
+
+        function returnToQuiz() {
+            navigate('quiz');
+        }
+
+        function renderQuizScreen() {
+            const q = questionsData[state.currentQuestionIndex];
+            const totalQ = questionsData.length;
+            const progressPercent = ((state.currentQuestionIndex + 1) / totalQ) * 100;
+            const selectedOpt = state.answers[state.currentQuestionIndex];
+            const isAnswered = selectedOpt !== undefined;
+
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-8 border-4 border-amber-400">
+                    <!-- Quiz Header -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-3 border-amber-200 gap-2">
+                        <div>
+                            <span class="text-xs font-bold bg-orange-200 text-orange-900 px-3 py-1 rounded-full">WULANGAN ${q.wulangan}</span>
+                            <h2 class="text-lg sm:text-xl font-extrabold text-amber-900 mt-1">SOAL ${state.currentQuestionIndex + 1} SAKA ${totalQ}</h2>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm font-bold text-amber-900">
+                            <div>Petualang: <span class="text-orange-600">${state.studentName}</span></div>
+                            <div class="bg-amber-100 px-3 py-1 rounded-xl border border-amber-300">Skor: <span class="text-emerald-600">${state.score}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-amber-100 rounded-full h-3 mb-6 overflow-hidden border border-amber-300">
+                        <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                    </div>
+
+                    <!-- Question Box -->
+                    <div class="bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-5 sm:p-6 mb-6">
+                        <p class="text-base sm:text-lg font-bold text-slate-900 mb-6">${q.question}</p>
+
+                        <div class="grid grid-cols-1 gap-3">
+                            ${q.options.map((opt, idx) => {
+                                const optLetter = ['A', 'B', 'C', 'D'][idx];
+                                let btnStyle = "bg-white hover:bg-amber-100 border-amber-300 text-slate-800";
+                                if (isAnswered) {
+                                    if (idx === q.answer) {
+                                        btnStyle = "bg-emerald-500 text-white border-emerald-600 font-bold shadow-md";
+                                    } else if (idx === selectedOpt && idx !== q.answer) {
+                                        btnStyle = "bg-red-500 text-white border-red-600 font-bold shadow-md";
+                                    } else {
+                                        btnStyle = "bg-white text-slate-400 border-slate-200 opacity-60";
+                                    }
+                                }
+                                return `
+                                    <button ${isAnswered ? 'disabled' : `onclick="handleAnswer(${idx})"`} class="w-full text-left p-4 rounded-xl border-2 transition flex items-center gap-3 ${btnStyle}">
+                                        <span class="w-8 h-8 rounded-lg bg-amber-200 text-amber-900 font-bold flex items-center justify-center text-sm">${optLetter}</span>
+                                        <span class="text-sm sm:text-base">${opt}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Feedback Section -->
+                        ${isAnswered ? `
+                            <div class="mt-6 p-4 rounded-2xl border ${selectedOpt === q.answer ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-300 text-red-900'} animate-fade-in">
+                                <div class="font-bold text-lg mb-1">
+                                    ${selectedOpt === q.answer ? '✓ WANGSULAN BENER!' : '✗ DURUNG BENER'}
+                                </div>
+                                <p class="text-sm mb-2">
+                                    ${selectedOpt === q.answer ? `Apik banget, ${state.studentName}!` : `Ora apa-apa, ${state.studentName}. Wangsulan sing bener yaiku: <span class="font-bold">${['A', 'B', 'C', 'D'][q.answer]}. ${q.options[q.answer]}</span>`}
+                                </p>
+                                <p class="text-xs italic text-slate-600 bg-white/60 p-2 rounded-lg border border-slate-200">
+                                    ${q.explanation}
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Navigation Footer inside Quiz -->
+                    <div class="flex flex-wrap justify-between items-center gap-3">
+                        <button onclick="returnToMaterialFromQuiz()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold py-3 px-5 rounded-xl text-sm border border-amber-300 flex items-center gap-2">
+                            📚 BALIK MENYANG MATERI
+                        </button>
+
+                        <div class="flex gap-2">
+                            ${state.currentQuestionIndex > 0 ? `
+                                <button onclick="prevQuestion()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 px-5 rounded-xl text-sm">
+                                    &larr; Sadurunge
+                                </button>
+                            ` : ''}
+                            
+                            ${isAnswered ? `
+                                <button onclick="nextQuestion()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-extrabold py-3 px-6 rounded-xl text-sm shadow">
+                                    ${state.currentQuestionIndex < totalQ - 1 ? 'Soal Sabanjure &rarr;' : 'Ndeleng Hasil Akhir 🏆'}
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleAnswer(optIdx) {
+            const q = questionsData[state.currentQuestionIndex];
+            state.answers[state.currentQuestionIndex] = optIdx;
+            if (optIdx === q.answer) {
+                state.score += 20; // 50 questions * 20 = 1000 max score
+            }
+            render();
+        }
+
+        function nextQuestion() {
+            if (state.currentQuestionIndex < questionsData.length - 1) {
+                state.currentQuestionIndex++;
+                render();
+            } else {
+                navigate('result');
+            }
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestionIndex > 0) {
+                state.currentQuestionIndex--;
+                render();
+            }
+        }
+
+        function returnToMaterialFromQuiz() {
+            const q = questionsData[state.currentQuestionIndex];
+            state.currentWulangan = q.wulangan;
+            state.currentSubMaterial = 'A';
+            navigate('material');
+        }
+
+        function renderResultScreen() {
+            let correctCount = 0;
+            let incorrectCount = 0;
+            Object.keys(state.answers).forEach(qIdx => {
+                if (state.answers[qIdx] === questionsData[qIdx].answer) {
+                    correctCount++;
+                } else {
+                    incorrectCount++;
+                }
+            });
+
+            const finalScore = correctCount * 20;
+            let badge = "💪 PEJUANG SINAU BASA JAWA";
+            if (finalScore >= 800) badge = "🏆 JAGO BASA JAWA";
+            else if (finalScore >= 500) badge = "🌟 PETUALANG BASA JAWA";
+
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-10 border-4 border-amber-400 text-center">
+                    <div class="text-5xl sm:text-6xl mb-3">🎉🏆🎊</div>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-amber-900 mb-1">PETUALANGAN RAMPUNG!</h2>
+                    <p class="text-lg font-bold text-amber-700 mb-6">Wilujeng, <span class="text-orange-600">${state.studentName}</span>!</p>
+
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 max-w-md mx-auto mb-6 shadow-inner">
+                        <div class="text-sm font-bold text-amber-800 mb-1">SKOR AKHIR MU</div>
+                        <div class="text-4xl sm:text-5xl font-extrabold text-orange-600 mb-4">${finalScore} <span class="text-lg text-slate-500">/ 1000</span></div>
+
+                        <div class="grid grid-cols-2 gap-4 text-left border-t border-amber-200 pt-4">
+                            <div class="bg-white p-3 rounded-xl border border-amber-100">
+                                <div class="text-xs text-slate-500 font-bold">Wangsulan Bener</div>
+                                <div class="text-xl font-extrabold text-emerald-600">${correctCount}</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl border border-amber-100">
+                                <div class="text-xs text-slate-500 font-bold">Wangsulan Salah</div>
+                                <div class="text-xl font-extrabold text-red-600">${incorrectCount}</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 py-2 px-4 bg-amber-200 text-amber-900 font-extrabold rounded-xl text-sm shadow">
+                            ${badge}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-center gap-3">
+                        <button onclick="navigate('certificate')" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-2">
+                            🏆 DELENG SERTIFIKAT DIGITAL
+                        </button>
+                        <button onclick="resetQuiz()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-4 px-6 rounded-2xl shadow">
+                            🔄 ULANGI KUIS
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetQuiz() {
+            state.score = 0;
+            state.currentQuestionIndex = 0;
+            state.answers = {};
+            navigate('quiz');
+        }
+
+        function renderCertificateScreen() {
+            let correctCount = 0;
+            Object.keys(state.answers).forEach(qIdx => {
+                if (state.answers[qIdx] === questionsData[qIdx].answer) correctCount++;
+            });
+            const finalScore = correctCount * 20;
+            const currentDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            return `
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-10 border-4 border-amber-500 text-center relative overflow-hidden">
+                    <div class="absolute -top-10 -left-10 text-7xl opacity-10">📜</div>
+                    <div class="absolute -bottom-10 -right-10 text-7xl opacity-10">🌿</div>
+
+                    <div class="border-4 border-double border-amber-600 p-6 sm:p-8 rounded-2xl bg-amber-50/50">
+                        <div class="text-xs sm:text-sm font-extrabold text-amber-800 tracking-widest uppercase mb-1">Giga Inovation • Sertifikat Resmi</div>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold text-amber-900 mb-2 font-serif">SERTIFIKAT PANGHARGAAN</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 mb-6">Dipunparingaken dhumateng:</p>
+
+                        <div class="text-2xl sm:text-4xl font-extrabold text-orange-600 border-b-2 border-amber-400 pb-2 mb-4 inline-block px-6">
+                            ${state.studentName}
+                        </div>
+
+                        <p class="text-sm sm:text-base text-slate-700 leading-relaxed mb-6">
+                            amargi kanthi mempeng sampun ngrampungake kabeh wulangan lan tantangan ing game edukatif:<br>
+                            <strong class="text-amber-900 text-lg">"PETUALANGAN BASA JAWA KELAS 3"</strong>
+                        </p>
+
+                        <div class="flex justify-center gap-6 mb-6 text-sm font-bold text-amber-900">
+                            <div class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm">
+                                Skor: <span class="text-orange-600">${finalScore} / 1000</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm">
+                                Bener: <span class="text-emerald-600">${correctCount} saka 50</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-end border-t border-amber-300 pt-4 mt-4 text-xs text-slate-600">
+                            <div>
+                                <p class="font-bold text-amber-900">Tanggal:</p>
+                                <p>${currentDate}</p>
+                            </div>
+                            <div>
+                                <p class="font-bold text-amber-900">Developer:</p>
+                                <p class="font-bold text-orange-600">Giga Inovation</p>
+                                <p>Telp: 081329200985</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap justify-center gap-3">
+                        <button onclick="window.print()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-xl shadow text-sm">
+                            🖨️ Cetak / Unduh Sertifikat
+                        </button>
+                        <button onclick="navigate('map')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 px-6 rounded-xl shadow text-sm">
+                            🗺️ Bali menyang Peta
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.onload = function() {
+            let counts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+            questionsData.forEach((q, idx) => {
+                if (q.answer === undefined || q.answer < 0 || q.answer > 3) {
+                    console.error(`Invalid question at index ${idx}`);
+                }
+                counts[q.answer]++;
+            });
+            console.log("Answer distribution verification (A, B, C, D):", counts);
+            render();
+        }
+    </script>
+</body>
+</html>
